@@ -8,7 +8,7 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 </style><link rel="manifest" href="./manifest.webmanifest"/><meta name="theme-color" content="#183769"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="default"/><meta name="apple-mobile-web-app-title" content="복지나침반"/><link rel="apple-touch-icon" href="./icons/icon-192.png"/><style>
 .pwa-installer{position:fixed;right:18px;bottom:18px;z-index:50;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 36px)}
-.pwa-install-btn{border:0;border-radius:100px;background:#173769;color:#fff;padding:13px 18px;font-weight:800;box-shadow:0 5px 22px #16284b55;font-size:13px}
+.pwa-install-btn:focus-visible{outline:3px solid #90b4ff;outline-offset:3px}.pwa-install-btn[data-ready="true"]{background:#2459bf}.pwa-install-btn{border:0;border-radius:100px;background:#173769;color:#fff;padding:13px 18px;font-weight:800;box-shadow:0 5px 22px #16284b55;font-size:13px}
 .pwa-hint{background:#fff;border:1px solid #d7e2f4;border-radius:14px;padding:15px;color:#17243b;box-shadow:0 8px 28px #17243b22;position:fixed;bottom:72px;right:18px;width:min(345px,calc(100vw - 36px));font-size:13px;line-height:1.75}
 .pwa-hint h3{margin:0 0 8px;font-size:16px}.pwa-hint p{margin:4px 0}.pwa-hint-close{float:right;border:0;background:transparent;color:#17243b;font-size:22px}.pwa-hidden{display:none!important}
 @media print{.pwa-installer,.pwa-hint{display:none!important}}
@@ -119,6 +119,79 @@ let source=add(out,'p',undefined,'help');[['보건복지부 선정기준','https
 }
 $('aCalc').addEventListener('click',assess);
 $('aClear').addEventListener('click',()=>{ids.forEach(id=>$(id).value='');$('aHousehold').value='1';$('aRegion').value='';$('aEarnDeduct').value='none';$('aAllowance').value='5000000';$('aDebtClass').value='unknown';$('aCarType').value='passenger';$('aSmallCommercial').value='unknown';$('aCarExceptional').value='none';$('aOutput').replaceChildren(make('p','입력값을 초기화했어. 소득·재산 입력값은 서버에 전송하지 않아.','help'));});
-})();</script><div class="pwa-installer" id="pwaInstaller"><button class="pwa-install-btn" type="button" id="pwaInstallBtn" aria-controls="pwaHelp">📲 무료로 앱 설치하기</button></div>
+})();</script><div class="pwa-installer" id="pwaInstaller"><button class="pwa-install-btn" type="button" id="pwaInstallBtn" aria-controls="pwaHelp" data-ready="false" aria-label="복지나침반 앱 설치 방법 보기">📲 앱 설치 방법 보기</button></div>
 <div class="pwa-hint pwa-hidden" id="pwaHelp" role="dialog" aria-label="앱 설치 안내"><button type="button" class="pwa-hint-close" id="pwaHelpClose" aria-label="닫기">×</button><h3>복지나침반 설치하기</h3><p id="pwaHelpText"></p><p style="color:#63758d">앱스토어 가입이나 결제 없이 설치할 수 있어. 기기에 따라 설치 메뉴 이름이 달라질 수 있어.</p></div>
-<script>(function(){'use strict';let pending=null;const b=document.getElementById('pwaInstallBtn'),h=document.getElementById('pwaHelp'),t=document.getElementById('pwaHelpText');const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;if(standalone){document.getElementById('pwaInstaller').classList.add('pwa-hidden');return}window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pending=e});window.addEventListener('appinstalled',()=>{pending=null;document.getElementById('pwaInstaller').classList.add('pwa-hidden');h.classList.add('pwa-hidden')});b.addEventListener('click',async()=>{if(pending){const p=pending;pending=null;try{await p.prompt();await p.userChoice}catch(e){}return}const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);t.textContent=ios?'아이폰: Safari에서 이 사이트를 열고 공유 버튼(□↑) → 홈 화면에 추가를 선택해.':'안드로이드: Chrome 또는 삼성 인터넷에서 메뉴(⋮) → 앱 설치 / 홈 화면에 추가를 선택해. PC는 브라우저의 앱 설치 메뉴를 이용해.';h.classList.toggle('pwa-hidden')});document.getElementById('pwaHelpClose').addEventListener('click',()=>h.classList.add('pwa-hidden'));if('serviceWorker'in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}))}})();</script></body></html>
+<script>(function(){
+'use strict';
+let deferredPrompt = null;
+let prompting = false;
+const installer = document.getElementById('pwaInstaller');
+const button = document.getElementById('pwaInstallBtn');
+const help = document.getElementById('pwaHelp');
+const helpText = document.getElementById('pwaHelpText');
+const close = document.getElementById('pwaHelpClose');
+const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+function isStandalone(){ return standaloneQuery.matches || navigator.standalone === true; }
+function hideInstalled(){ installer.classList.add('pwa-hidden'); help.classList.add('pwa-hidden'); }
+function updateButton(){
+  if(isStandalone()){hideInstalled();return;}
+  const available = !!deferredPrompt && !prompting;
+  button.dataset.ready = String(available);
+  button.textContent = available ? '📲 무료로 앱 설치하기' : '📲 앱 설치 방법 보기';
+  button.setAttribute('aria-label',available?'복지나침반 앱 설치 확인창 열기':'복지나침반 앱 설치 방법 보기');
+}
+function showGuide(extra){
+  const ua=navigator.userAgent;
+  const ios=/iPhone|iPad|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const inApp=/NAVER|KAKAOTALK|Instagram|FBAN|FBAV|Line\//i.test(ua);
+  const base=ios?'아이폰: Safari에서 사이트를 열고 공유(□↑) → 홈 화면에 추가를 선택해.':
+    inApp?'앱 내부 브라우저에서는 설치 확인창이 지원되지 않을 수 있어. 오른쪽 위 메뉴에서 외부 브라우저(Chrome 등)로 열어 줘.':
+    '안드로이드 Chrome 등에서 메뉴(⋮) → 앱 설치 또는 홈 화면에 추가를 선택해. 설치 가능 조건을 충족하면 이 버튼이 자동으로 ‘무료로 앱 설치하기’로 바뀌어.';
+  helpText.textContent = (extra?extra+' ':'')+base;
+  help.classList.remove('pwa-hidden');
+}
+// Browser decides when the app is installable; a prompt cannot be forced before this event.
+window.addEventListener('beforeinstallprompt',event=>{
+  event.preventDefault();
+  deferredPrompt=event;
+  help.classList.add('pwa-hidden');
+  updateButton();
+});
+window.addEventListener('appinstalled',()=>{
+  deferredPrompt=null;
+  prompting=false;
+  hideInstalled();
+});
+if(standaloneQuery.addEventListener)standaloneQuery.addEventListener('change',updateButton);
+else if(standaloneQuery.addListener)standaloneQuery.addListener(updateButton);
+button.addEventListener('click',()=>{
+  if(prompting)return;
+  if(!deferredPrompt){showGuide();return;}
+  // prompt() MUST run synchronously inside the actual user-click handler.
+  const event=deferredPrompt;
+  deferredPrompt=null;
+  prompting=true;
+  button.disabled=true;
+  button.textContent='설치 확인 중…';
+  try{
+    const outcome=event.prompt();
+    Promise.resolve(outcome).then(()=>event.userChoice).then(choice=>{
+      if(choice && choice.outcome==='dismissed')showGuide('설치를 취소했어.');
+    }).catch(()=>showGuide('브라우저 설치 확인창을 열 수 없었어.')).finally(()=>{
+      prompting=false;
+      button.disabled=false;
+      updateButton();
+    });
+  }catch(error){
+    prompting=false;
+    button.disabled=false;
+    updateButton();
+    showGuide('브라우저 설치 확인창을 열 수 없었어.');
+  }
+});
+close.addEventListener('click',()=>help.classList.add('pwa-hidden'));
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
+updateButton();
+})();</script></body></html>
