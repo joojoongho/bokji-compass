@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "0.3",
+  "generatedAt": "2026-11-19T23:58:05.898991+00:00",
+  "status": "demo_fixture",
+  "coverage": "테스트용 가상 항목, 실제 복지제도 아님",
+  "expectedTotal": 3,
+  "count": 3,
+  "sourceUrl": "https://www.data.go.kr/data/15113968/openapi.do",
+  "items": [
+    {
+      "id": "gov24:DEMO-01",
+      "name": "테스트: 청년 지원 예시",
+      "provider": "가상 기관",
+      "providerType": "중앙부처",
+      "category": "청년",
+      "audience": "청년 (테스트 문구)",
+      "criteria": "별도 확인",
+      "benefit": "가상의 혜택",
+      "apply": "신청처 확인",
+      "deadline": "",
+      "type": "",
+      "modifiedAt": "2026-11-20",
+      "sourceUrl": "https://www.data.go.kr/data/15113968/openapi.do",
+      "source": "행정안전부 공공서비스(혜택) 정보",
+      "eligibilityStatus": "unverified"
+    },
+    {
+      "id": "gov24:DEMO-02",
+      "name": "테스트: 주거 지원 예시",
+      "provider": "가상 기관",
+      "providerType": "지자체",
+      "category": "주거",
+      "audience": "거주자 (테스트 문구)",
+      "criteria": "별도 확인",
+      "benefit": "가상의 주거 지원",
+      "apply": "",
+      "deadline": "",
+      "type": "",
+      "modifiedAt": "",
+      "sourceUrl": "https://www.data.go.kr/data/15113968/openapi.do",
+      "source": "행정안전부 공공서비스(혜택) 정보",
+      "eligibilityStatus": "unverified"
+    },
+    {
+      "id": "gov24:DEMO-03",
+      "name": "테스트: 노후 지원 예시",
+      "provider": "가상 기관",
+      "providerType": "중앙부처",
+      "category": "노후",
+      "audience": "고령자 (테스트 문구)",
+      "criteria": "별도 확인",
+      "benefit": "가상의 노후 지원",
+      "apply": "",
+      "deadline": "",
+      "type": "",
+      "modifiedAt": "",
+      "sourceUrl": "https://www.data.go.kr/data/15113968/openapi.do",
+      "source": "행정안전부 공공서비스(혜택) 정보",
+      "eligibilityStatus": "unverified"
+    }
+  ]
+}
